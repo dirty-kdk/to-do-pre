@@ -12,7 +12,12 @@ const formElement = document.querySelector(".to-do__form");
 const inputElement = document.querySelector(".to-do__input");
 
 function loadTasks() {
-
+	const storedTasks = localStorage.getItem('tasks')
+	if (storedTasks) {
+		return JSON.parse(storedTasks)
+	}
+	
+	return items
 }
 
 function createItem(item) {
@@ -23,13 +28,62 @@ function createItem(item) {
   const duplicateButton = clone.querySelector(".to-do__item-button_type_duplicate");
   const editButton = clone.querySelector(".to-do__item-button_type_edit");
 
+	deleteButton.addEventListener('click', () => {
+		clone.remove()
+		const items = getTasksFromDOM()
+		saveTasks(items)
+	})
+
+	duplicateButton.addEventListener('click', () => {
+		const itemName = textElement.textContent
+		const newItem = createItem(itemName)
+		const items = getTasksFromDOM()
+
+		listElement.prepend(newItem)
+		saveTasks(items)
+	})
+
+	editButton.addEventListener('click', () => {
+		textElement.setAttribute('contenteditable', 'true')
+		textElement.focus()
+	})
+	textElement.addEventListener('blur', () => {
+		textElement.setAttribute('contenteditable', 'false')
+		const items = getTasksFromDOM()
+		saveTasks(items)
+	})
+
+	textElement.textContent = item;
+	return clone
 }
 
 function getTasksFromDOM() {
+	const itemsNamesElements = document.querySelectorAll('.to-do__item-text')
+	const tasks = []
 
+	itemsNamesElements.forEach((el) => {
+		tasks.push(el.textContent)
+	})
+
+	return tasks
 }
 
 function saveTasks(tasks) {
-
+	localStorage.setItem('tasks', JSON.stringify(tasks))
 }
 
+items = loadTasks();
+
+formElement.addEventListener('submit', (evt) => {
+	evt.preventDefault();
+	const taskText = inputElement.value;
+	listElement.prepend(createItem(taskText))
+	inputElement.value = ''
+	
+	items = getTasksFromDOM()
+	saveTasks(items)
+})
+
+items.forEach((item) => {
+	listElement.append(createItem(item));
+})
